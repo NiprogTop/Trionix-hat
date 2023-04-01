@@ -23,7 +23,7 @@ Servo LEDs;
 //left
 #define pin4 10
 
-#define ledPin 6
+#define ledPin 5 // 6
 
 #define PARSE_AMOUNT 6
 
@@ -91,6 +91,7 @@ void printData()
                     // heading
                     + String(mpu.getAngleZ()) + " "
                     // + String(mpu.getRoll()) + " "
+                    // + String(dr4_val_new) + " "
                     // depth
                     + String(sensor.depth() - depth_cal) + " "
                     // temp
@@ -157,18 +158,23 @@ void setMotors()
     dr3_val_new = map(intData[3], -100, 100, 1200, 1800);
     dr4_val_new = map(intData[4], -100, 100, 1200, 1800);
 
-    if (intData[5] != ledValue) {
-        ledValue = intData[5];
-        analogWrite(ledPin, ledValue);
-    }
+    dr1.writeMicroseconds(dr1_val_new);
 
-        dr1.writeMicroseconds(dr1_val_new);
+    dr2.writeMicroseconds(dr2_val_new);
 
-        dr2.writeMicroseconds(dr2_val_new);
+    dr3.writeMicroseconds(dr3_val_new);
 
-        dr3.writeMicroseconds(dr3_val_new);
+    dr4.writeMicroseconds(dr4_val_new);
+}
 
-        dr4.writeMicroseconds(dr4_val_new);
+void setLight(){
+  int *intData = parser.getData();
+  if (intData[5] > 0) {
+    ledValue = intData[5];
+    // analogWrite(ledPin, ledValue);
+    digitalWrite(ledPin, 1);
+  } else{ digitalWrite(ledPin, 0);}
+
 }
 
 
@@ -181,6 +187,7 @@ void loop() {
     if (comand == 3 && mode == 2){straeming();}
 
     setMotors();
+    setLight();
   }
   
 
