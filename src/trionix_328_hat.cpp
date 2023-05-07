@@ -95,9 +95,9 @@ void printData()
                     // depth
                     + String(sensor.depth() - depth_cal) + " "
                     // temp
-                    + String(sensor.temperature()) + " " + ";";
+                    + String(sensor.temperature()) + ";";
                     // end
-                    // + " " + ";";
+                    // + ";";
 
         Serial.println(answer);
     
@@ -145,7 +145,7 @@ void setup() {
   updateDepth();
   depth_cal = sensor.depth(); //калибровка глубины в самом начале работы
 
-  OS.attach(0, updateDepth, 20);
+  OS.attach(0, updateDepth, 120);
   OS.attach(1, printData, 50);
 }
 
@@ -153,10 +153,10 @@ void setup() {
 void setMotors()
 {
     int *intData = parser.getData();
-    dr1_val_new = map(intData[1], -100, 100, 1200, 1800);
-    dr2_val_new = map(intData[2], -100, 100, 1200, 1800);
-    dr3_val_new = map(intData[3], -100, 100, 1200, 1800);
-    dr4_val_new = map(intData[4], -100, 100, 1200, 1800);
+    dr1_val_new = map(intData[1], -100, 100, 1100, 1900);
+    dr2_val_new = map(intData[2], -100, 100, 1100, 1900);
+    dr3_val_new = map(intData[3], -100, 100, 1100, 1900);
+    dr4_val_new = map(intData[4], -100, 100, 1100, 1900);
 
     dr1.writeMicroseconds(dr1_val_new);
 

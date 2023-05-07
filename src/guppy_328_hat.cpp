@@ -86,6 +86,8 @@ void printData()
 {
         String answer = "#3 "
                     // pitch
+                    // + String(dr1_val_new) + " "
+                    // + String(dr3_val_new) + " "
                     + String(mpu.getAngleY()) + " "
                     // roll
                     + String(mpu.getAngleX()) + " "
@@ -146,7 +148,7 @@ void setup() {
   updateDepth();
   depth_cal = sensor.depth(); //калибровка глубины в самом начале работы
 
-  OS.attach(0, updateDepth, 20);
+  OS.attach(0, updateDepth, 120);
   OS.attach(1, printData, 50);
 }
 
@@ -154,12 +156,12 @@ void setup() {
 void setMotors()
 {
     int *intData = parser.getData();
-    dr1_val_new = map(intData[1], -100, 100, 1200, 1800);
-    dr2_val_new = map(intData[2], -100, 100, 1200, 1800);
-    dr3_val_new = map(intData[3], -100, 100, 1200, 1800);
-    dr4_val_new = map(intData[4], -100, 100, 1200, 1800);
-    dr5_val_new = map(intData[5], -100, 100, 1200, 1800);
-    dr6_val_new = map(intData[6], -100, 100, 1200, 1800);
+    dr1_val_new = map(intData[1], -100, 100, 1100, 1900);
+    dr2_val_new = map(intData[2], -100, 100, 1100, 1900);
+    dr3_val_new = map(intData[3], -100, 100, 1100, 1900);
+    dr4_val_new = map(intData[4], -100, 100, 1100, 1900);
+    dr5_val_new = map(intData[5], -100, 100, 1100, 1900);
+    dr6_val_new = map(intData[6], -100, 100, 1100, 1900);
 
     dr1.writeMicroseconds(dr1_val_new);
 
@@ -179,6 +181,7 @@ void loop() {
   parser.update();
   if (parser.received()){
     int comand = parser.getData()[0];
+    // Serial.println(comand);
     
     if (comand == 3 && mode == 2){straeming();}
 
