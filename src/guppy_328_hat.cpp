@@ -15,16 +15,16 @@ Servo dr1, dr2, dr3, dr4, dr5, dr6;
 
 //front
 #define pin1 3
-//right
+//front
 #define pin2 9
 //back
 #define pin3 11
 //left
 #define pin4 10
-//back_l
-#define pin5 5 
-//back_w
-#define pin6 6 
+//right 
+#define pin5 5
+//back
+#define pin6 6
 
 #define PARSE_AMOUNT 6
 
@@ -36,30 +36,27 @@ int16_t dr1_val_new, dr2_val_new, dr3_val_new, dr4_val_new, dr5_val_new, dr6_val
 int intData = 0;
 
 float depth_cal = 0; //калибровочное значение глубины
-// int *intData;
-
-int ledValue = 0;
 
 int timr = 0;
 
-int mode = 1; // 1 - streaming,  2 - calibration
+int mode = 1; // 1 - streaming
 
 MPU6050 mpu(Wire);
 MS5837 sensor;
 
 void initMotors(){
   dr1.attach(pin1);
-  dr1.writeMicroseconds(1500);
+  dr1.writeMicroseconds(1480);
   dr2.attach(pin2);
-  dr2.writeMicroseconds(1500);
+  dr2.writeMicroseconds(1480);
   dr3.attach(pin3);
-  dr3.writeMicroseconds(1500);
+  dr3.writeMicroseconds(1480);
   dr4.attach(pin4);
-  dr4.writeMicroseconds(1500);
+  dr4.writeMicroseconds(1480);
   dr5.attach(pin5);
-  dr5.writeMicroseconds(1500);
+  dr5.writeMicroseconds(1480);
   dr6.attach(pin6);
-  dr6.writeMicroseconds(1500);
+  dr6.writeMicroseconds(1480);
   delay(7000);
 }
 
@@ -85,22 +82,18 @@ void straeming()
 void printData()
 {
         String answer = "#3 "
-                    // pitch
-                    // + String(dr1_val_new) + " "
-                    // + String(dr3_val_new) + " "
-                    + String(mpu.getAngleY()) + " "
                     // roll
+                    + String(mpu.getAngleY()) + " "
+                    // pitch
                     + String(mpu.getAngleX()) + " "
                     // heading
                     + String(mpu.getAngleZ()) + " "
-                    // + String(mpu.getRoll()) + " "
-                    // + String(dr4_val_new) + " "
                     // depth
                     + String(sensor.depth() - depth_cal) + " "
                     // temp
-                    + String(sensor.temperature()) + " " + ";";
+                    + String(sensor.temperature()) + ";";
                     // end
-                    // + " " + ";";
+                    // + ";";
 
         Serial.println(answer);
     
@@ -156,12 +149,12 @@ void setup() {
 void setMotors()
 {
     int *intData = parser.getData();
-    dr1_val_new = map(intData[1], -100, 100, 1100, 1900);
-    dr2_val_new = map(intData[2], -100, 100, 1100, 1900);
-    dr3_val_new = map(intData[3], -100, 100, 1100, 1900);
-    dr4_val_new = map(intData[4], -100, 100, 1100, 1900);
-    dr5_val_new = map(intData[5], -100, 100, 1100, 1900);
-    dr6_val_new = map(intData[6], -100, 100, 1100, 1900);
+    dr1_val_new = map(intData[1], -100, 100, 1080, 1880);
+    dr2_val_new = map(intData[2], -100, 100, 1080, 1880);
+    dr3_val_new = map(intData[3], -100, 100, 1080, 1880);
+    dr4_val_new = map(intData[4], -100, 100, 1080, 1880);
+    dr5_val_new = map(intData[5], -100, 100, 1080, 1880);
+    dr6_val_new = map(intData[6], -100, 100, 1080, 1880);
 
     dr1.writeMicroseconds(dr1_val_new);
 
@@ -171,26 +164,27 @@ void setMotors()
 
     dr4.writeMicroseconds(dr4_val_new);
 
-    dr4.writeMicroseconds(dr5_val_new);
+    dr5.writeMicroseconds(dr5_val_new);
 
-    dr4.writeMicroseconds(dr6_val_new);
+    dr6.writeMicroseconds(dr6_val_new);
+
 }
+
+
 
 
 void loop() {
   parser.update();
   if (parser.received()){
     int comand = parser.getData()[0];
-    // Serial.println(comand);
     
-    if (comand == 3 && mode == 2){straeming();}
-
+    if (comand == 3 && mode == 2){
+      straeming();
+    }
     setMotors();
   }
-  
 
   updateIMU();
 
   OS.tick();
-
 }

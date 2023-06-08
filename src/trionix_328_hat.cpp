@@ -12,7 +12,6 @@
 #include "MS5837.h"
 
 Servo dr1, dr2, dr3, dr4;
-Servo LEDs;
 
 //front
 #define pin1 3
@@ -23,7 +22,7 @@ Servo LEDs;
 //left
 #define pin4 10
 
-#define ledPin 5 // 6
+#define ledPin 6 // 5
 
 #define PARSE_AMOUNT 6
 
@@ -35,27 +34,25 @@ int16_t dr1_val_new, dr2_val_new, dr3_val_new, dr4_val_new;
 int intData = 0;
 
 float depth_cal = 0; //калибровочное значение глубины
-// int *intData;
 
 int ledValue = 0;
 
 int timr = 0;
 
-int mode = 1; // 1 - streaming,  2 - calibration
+int mode = 1; // 1 - streaming
 
 MPU6050 mpu(Wire);
 MS5837 sensor;
 
 void initMotors(){
   dr1.attach(pin1);
-  dr1.writeMicroseconds(1500);
+  dr1.writeMicroseconds(1480);
   dr2.attach(pin2);
-  dr2.writeMicroseconds(1500);
+  dr2.writeMicroseconds(1480);
   dr3.attach(pin3);
-  dr3.writeMicroseconds(1500);
+  dr3.writeMicroseconds(1480);
   dr4.attach(pin4);
-  dr4.writeMicroseconds(1500);
-  // delay(7000);
+  dr4.writeMicroseconds(1480);
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, 1);
   delay(7000);
@@ -84,23 +81,19 @@ void straeming()
 void printData()
 {
         String answer = "#3 "
-                    // pitch
-                    + String(mpu.getAngleY()) + " "
                     // roll
+                    + String(mpu.getAngleY()) + " "
+                    // pitch
                     + String(mpu.getAngleX()) + " "
                     // heading
                     + String(mpu.getAngleZ()) + " "
-                    // + String(mpu.getRoll()) + " "
-                    // + String(dr4_val_new) + " "
                     // depth
                     + String(sensor.depth() - depth_cal) + " "
                     // temp
                     + String(sensor.temperature()) + ";";
                     // end
-                    // + ";";
 
         Serial.println(answer);
-    
 }
 
 void updateDepth()
@@ -153,10 +146,10 @@ void setup() {
 void setMotors()
 {
     int *intData = parser.getData();
-    dr1_val_new = map(intData[1], -100, 100, 1100, 1900);
-    dr2_val_new = map(intData[2], -100, 100, 1100, 1900);
-    dr3_val_new = map(intData[3], -100, 100, 1100, 1900);
-    dr4_val_new = map(intData[4], -100, 100, 1100, 1900);
+    dr1_val_new = map(intData[1], -100, 100, 1080, 1880);
+    dr2_val_new = map(intData[2], -100, 100, 1080, 1880);
+    dr3_val_new = map(intData[3], -100, 100, 1080, 1880);
+    dr4_val_new = map(intData[4], -100, 100, 1080, 1880);
 
     dr1.writeMicroseconds(dr1_val_new);
 
@@ -165,18 +158,12 @@ void setMotors()
     dr3.writeMicroseconds(dr3_val_new);
 
     dr4.writeMicroseconds(dr4_val_new);
+
+    if (intData[5] != ledValue) {
+        ledValue = intData[5];
+        analogWrite(ledPin, ledValue);
+    }
 }
-
-void setLight(){
-  int *intData = parser.getData();
-  if (intData[5] > 0) {
-    ledValue = intData[5];
-    // analogWrite(ledPin, ledValue);
-    digitalWrite(ledPin, 1);
-  } else{ digitalWrite(ledPin, 0);}
-
-}
-
 
 
 void loop() {
@@ -187,7 +174,6 @@ void loop() {
     if (comand == 3 && mode == 2){straeming();}
 
     setMotors();
-    setLight();
   }
   
 
