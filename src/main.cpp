@@ -66,11 +66,12 @@ void setup() {
 }
 
 void loop() {
+  start();
   // Serial.println(" hi! ");
-  parser.update();
-  if (parser.received()){
-    int comand = parser.getData()[1];
-    Serial.println(comand);
+  // parser.update();
+  // if (parser.received()){
+  //   int comand = parser.getData()[1];
+  //   Serial.println(comand);
     
     // if (comand == 3 && mode == 2){straeming();}
 
@@ -81,4 +82,3 @@ void loop() {
   // updateIMU();
 
   // OS.tick();
-}
