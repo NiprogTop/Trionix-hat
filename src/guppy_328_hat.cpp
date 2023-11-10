@@ -4,6 +4,14 @@
   #include <WProgram.h>
 #endif
 
+#if FMT_EXCEPTIONS
+# define FMT_TRY try
+# define FMT_CATCH(x) catch (x)
+#else
+# define FMT_TRY if (true)
+# define FMT_CATCH(x) if (false)
+#endif
+
 #include "Wire.h"
 #include <MPU6050_light.h>
 #include <GyverOS.h>
@@ -142,7 +150,9 @@ void setup() {
   depth_cal = sensor.depth(); //калибровка глубины в самом начале работы
 
   OS.attach(0, updateDepth, 120);
-  OS.attach(1, printData, 50);
+  OS.attach(1, printData, 70);
+
+  straeming();
 }
 
 
@@ -174,13 +184,31 @@ void setMotors()
 
 
 void loop() {
+  // try
+  // {
+  //   parser.update();
+  //   if (parser.received()){
+  //     int comand = parser.getData()[0];
+      
+  //     if (comand == 3 && mode == 2){
+  //       straeming();
+  //     }
+  //     setMotors();
+  //   }
+  // }
+  // catch (...)
+  // {
+  //   updateIMU();
+  // }
+  
+  
   parser.update();
   if (parser.received()){
-    int comand = parser.getData()[0];
+    // int comand = parser.getData()[0];
     
-    if (comand == 3 && mode == 2){
-      straeming();
-    }
+    // if (comand == 3 && mode == 2){
+    //   straeming();
+    // }
     setMotors();
   }
 
