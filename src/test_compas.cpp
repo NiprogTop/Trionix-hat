@@ -34,6 +34,8 @@ void setup()
     Serial.println("Initialize VCM5883L");
   }
   delay(1000);
+  float declinationAngle = (4.0 + (26.0 / 60.0)) / (180 / PI);
+  compass.setDeclinationAngle(declinationAngle);
 }
 void loop()
 {
@@ -44,8 +46,8 @@ void loop()
    * @n      For Bytom / Poland declination angle is 4'26E (positive)
    * @n      Formula: (deg + (min / 60.0)) / (180 / PI);
    */
-  float declinationAngle = (4.0 + (26.0 / 60.0)) / (180 / PI);
-  compass.setDeclinationAngle(declinationAngle);
+  // float declinationAngle = (4.0 + (26.0 / 60.0)) / (180 / PI);
+  // compass.setDeclinationAngle(declinationAngle);
   sVector_t mag = compass.readRaw();
   compass.getHeadingDegrees();
   Serial.print("X:");

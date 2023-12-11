@@ -34,7 +34,7 @@ Servo dr1, dr2, dr3, dr4, dr5, dr6;
 //back
 #define pin6 6
 
-#define PARSE_AMOUNT 6
+#define PARSE_AMOUNT 7
 
 GyverOS<3> OS; 
 SerialParser parser(PARSE_AMOUNT);
@@ -150,7 +150,7 @@ void setup() {
   depth_cal = sensor.depth(); //калибровка глубины в самом начале работы
 
   OS.attach(0, updateDepth, 120);
-  OS.attach(1, printData, 70);
+  OS.attach(1, printData, 50);
 
   straeming();
 }
@@ -183,32 +183,9 @@ void setMotors()
 
 
 
-void loop() {
-  // try
-  // {
-  //   parser.update();
-  //   if (parser.received()){
-  //     int comand = parser.getData()[0];
-      
-  //     if (comand == 3 && mode == 2){
-  //       straeming();
-  //     }
-  //     setMotors();
-  //   }
-  // }
-  // catch (...)
-  // {
-  //   updateIMU();
-  // }
-  
-  
+void loop() {  
   parser.update();
   if (parser.received()){
-    // int comand = parser.getData()[0];
-    
-    // if (comand == 3 && mode == 2){
-    //   straeming();
-    // }
     setMotors();
   }
 
