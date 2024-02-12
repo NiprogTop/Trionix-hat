@@ -4,10 +4,6 @@
   #include <WProgram.h>
 #endif
 
-#include <ArduinoEigen.h>
-
-using Eigen::MatrixXd;
-
 #if FMT_EXCEPTIONS
 # define FMT_TRY try
 # define FMT_CATCH(x) catch (x)
@@ -22,7 +18,12 @@ using Eigen::MatrixXd;
 #include <SerialParser.h>
 #include <Servo.h>
 #include "MS5837.h"
+#include <FastLED.h>
 #include <DFRobot_QMC5883.h>
+#include "GyverFilters.h"
+
+// GMedian3<int> Filter; 
+GKalman Filter(20, 0.55);
 
 Servo dr1, dr2, dr3, dr4, dr5, dr6;
 
@@ -41,7 +42,16 @@ Servo dr1, dr2, dr3, dr4, dr5, dr6;
 
 #define PARSE_AMOUNT 7
 
-GyverOS<3> OS; 
+#define LED_PIN 4
+#define BRIGHTNESS 200
+#define NUM_LEDS 1
+CRGB leds[NUM_LEDS];
+int led_mode = 1;
+int led_status = 0;
+
+int targetHeading = 340;
+
+GyverOS<4> OS; 
 SerialParser parser(PARSE_AMOUNT);
 DFRobot_QMC5883 compass(&Wire, QMC5883_ADDRESS); /* I2C addr */
 
@@ -54,6 +64,8 @@ float depth_cal = 0; //калибровочное значение глубин�
 
 int timr = 0;
 int heading = 0;
+int heading_p = 0;
+float declinationAngle = (4.0 + (26.0 / 60.0)) / (180 / PI);
 
 int mode = 1; // 1 - streaming
 
@@ -77,43 +89,6 @@ void initMotors(){
   delay(7000);
 }
 
-void init_kalman(){
-    Eigen::VectorXd x(2); // Состояние (курс и скорость изменения курса)
-  x << 0, 0; // Начальный курс и скорость изменения курса
-  Eigen::MatrixXd P(2, 2); // Матрица ковариации
-  P << 1, 0, 0, 1; // Начальная матрица ковариации
-
-  // Инициализация матриц системы
-  Eigen::MatrixXd F(2, 2); // Матрица перехода состояния
-  F << 1, 1, 0, 1; // Простая модель изменения курса с постоянной скоростью
-  Eigen::MatrixXd H(1, 2); // Матрица измерений
-  H << 1, 0; // Мы можем измерять только курс
-  Eigen::MatrixXd R(1, 1); // Матрица ковариации шума измерений
-  R << 1;
-
-  // Инициализация процесса фильтрации
-  double dt = 0.1; // Временной шаг
-  double processNoise = 0.2; // Шум процесса
-  
-  for (int i = 0; i < 100; ++i) {
-    x = F * x;
-    P = F * P * F.transpose() + processNoise;
-
-    // Обновление состояния на основе измерений
-    Eigen::VectorXd z(1);
-    z << normalizeCompassData(i); // Измерение курса с компаса, нормализованное для использования в фильтре
-    Eigen::VectorXd y = z - H * x;
-    Eigen::MatrixXd S = H * P * H.transpose() + R;
-    Eigen::MatrixXd K = P * H.transpose() * S.inverse();
-    x = x + K * y;
-    P = (Eigen::MatrixXd::Identity(2, 2) - K * H) * P;
-
-    Serial.print("x = ");
-    Serial.println(x(0)); // Выводим только курс
-    delay(100); // Задержка для наглядности
-  }
-}
-
 void printServiceMsg(String msg)
 {
     Serial.print("#0 " + msg + ";");    
@@ -123,6 +98,8 @@ void stopStreaming()
 {
     OS.stop(0);
     OS.stop(1);
+    OS.stop(2);
+    OS.stop(3);
 }
 
 void straeming()
@@ -130,6 +107,8 @@ void straeming()
     mode = 1;
     OS.start(0);
     OS.start(1);
+    OS.start(2);
+    OS.start(3);
 }
 
 void printData()
@@ -140,11 +119,16 @@ void printData()
                     // pitch
                     + String(mpu.getAngleX()) + " "
                     // heading
-                    + String(heading) + " "
+                    // + String(mpu.getAngleZ()) + " "
+                    // + String(heading) + " "
+                    // + String(heading_p) + " "
+                    + String(Filter.filtered(heading)) + " "
                     // depth
                     + String(sensor.depth() - depth_cal) + " "
                     // temp
                     + String(sensor.temperature()) + ";";
+                    // BatLevel
+                    // + String(sensor.temperature()) + ";";
                     // end
                     // + ";";
 
@@ -160,15 +144,61 @@ void updateDepth()
 void updateIMU()
 {
     mpu.update();
+}
 
+
+double calculateTargetHeading(float currentHead) {
+  if(targetHeading < 90 && currentHead > 180){
+      return targetHeading + 360;
+  }
+  else if(targetHeading > 270 && currentHead < 180){
+      return targetHeading - 360;
+  }
+  else {
+      return targetHeading;
+  }      
+} 
+
+void updateCompass()
+{
+    // mpu.update();
+
+    // mag = compass.readRaw();
+    // sVector_t mag = compass.readRaw();
+    // compass.getHeadingDegrees();
+    // heading = mag.HeadingDegress;
+    
+    compass.setDeclinationAngle(declinationAngle);
     mag = compass.readRaw();
-    sVector_t mag = compass.readRaw();
     compass.getHeadingDegrees();
     heading = mag.HeadingDegress;
+    // heading_p = calculateTargetHeading(heading);
+}
+
+   
+
+void LED_update(){
+  if (led_mode == 0){
+    if (led_status == 0){
+      leds[0] = CRGB::Black;
+      FastLED.show();
+      led_status = 1;
+    }
+    else{
+      leds[0] = CRGB::Blue;
+      FastLED.show();
+      led_status = 0;
+    }
+  }
+  else if (led_mode == 1){
+    leds[0] = CRGB::Green;
+      FastLED.show();
+  }
+  // leds[0] = CRGB::Black;
+  // FastLED.show();
 }
 
 double normalizeCompassData(double rawCourse) {
-    
     return rawCourse;
 }
 
@@ -180,9 +210,22 @@ void setup() {
   Serial.begin(115200);
   Wire.begin();
 
-  initMotors();
+  
 
-  // MPU sensor activation
+  //  #### Light_data #####
+
+  FastLED.addLeds<WS2811, LED_PIN, GRB>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
+  FastLED.setBrightness(  BRIGHTNESS );
+
+  FastLED.clear();
+
+  leds[0] = CRGB::Yellow;
+  FastLED.show();
+
+
+  initMotors();
+  
+  // #####     MPU sensor activation   #####
 
   byte status = mpu.begin();
   while(status!=0){ } // stop everything if could not connect to MPU6050
@@ -190,7 +233,7 @@ void setup() {
   delay(1000);
   mpu.calcOffsets(true,true);
 
-  // Depth sensor activation
+  // #####   Depth sensor activation  #####
 
   while (!sensor.init()) {
     delay(1000);
@@ -202,7 +245,7 @@ void setup() {
   updateDepth();
   depth_cal = sensor.depth(); //калибровка глубины в самом начале работы
 
-  // Compas sensor activation
+  // #####   Compas sensor activation  #####
 
   while (!compass.begin())
   {
@@ -210,12 +253,14 @@ void setup() {
     delay(500);
   }
 
-  float declinationAngle = (4.0 + (26.0 / 60.0)) / (180 / PI);
-  compass.setDeclinationAngle(declinationAngle);
+  // float declinationAngle = (4.0 + (26.0 / 60.0)) / (180 / PI);
+  // compass.setDeclinationAngle(declinationAngle);
 
 
   OS.attach(0, updateDepth, 120);
   OS.attach(1, printData, 50);
+  OS.attach(2, updateCompass, 200);
+  OS.attach(3, LED_update, 800);
 
   straeming();
 }
