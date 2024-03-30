@@ -147,17 +147,17 @@ void updateIMU()
 }
 
 
-double calculateTargetHeading(float currentHead) {
-  if(targetHeading < 90 && currentHead > 180){
-      return targetHeading + 360;
-  }
-  else if(targetHeading > 270 && currentHead < 180){
-      return targetHeading - 360;
-  }
-  else {
-      return targetHeading;
-  }      
-} 
+// double calculateTargetHeading(float currentHead) {
+//   if(targetHeading < 90 && currentHead > 180){
+//       return targetHeading + 360;
+//   }
+//   else if(targetHeading > 270 && currentHead < 180){
+//       return targetHeading - 360;
+//   }
+//   else {
+//       return targetHeading;
+//   }      
+// } 
 
 void updateCompass()
 {

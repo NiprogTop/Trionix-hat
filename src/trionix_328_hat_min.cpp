@@ -26,7 +26,8 @@ Servo dr1, dr2, dr3, dr4, Manipul;
 
 #define ServoPin 5
 
-#define PARSE_AMOUNT 7
+#define PARSE_AMOUNT 6
+// #define PARSE_AMOUNT 7
 
 
 GyverOS<3> OS; 
@@ -56,8 +57,8 @@ void initMotors(){
   dr3.writeMicroseconds(1480);
   dr4.attach(pin4);
   dr4.writeMicroseconds(1480);
-  Manipul.attach(ServoPin);
-  Manipul.writeMicroseconds(2500);
+  // Manipul.attach(ServoPin);
+  // Manipul.writeMicroseconds(2500);
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, 1);
   delay(7000);
@@ -155,7 +156,7 @@ void setMotors()
     dr2_val_new = map(intData[2], -100, 100, 1080, 1880);
     dr3_val_new = map(intData[3], -100, 100, 1080, 1880);
     dr4_val_new = map(intData[4], -100, 100, 1080, 1880);
-    manip_val_new = map(intData[6], 0, 100, 1800, 2500);
+    // manip_val_new = map(intData[6], 0, 100, 1800, 2500);
 
     dr1.writeMicroseconds(dr1_val_new);
 
@@ -165,7 +166,7 @@ void setMotors()
 
     dr4.writeMicroseconds(dr4_val_new);
     
-    Manipul.writeMicroseconds(manip_val_new);
+    // Manipul.writeMicroseconds(manip_val_new);
 
     if (intData[5] != ledValue) {
         ledValue = intData[5];

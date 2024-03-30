@@ -4,11 +4,14 @@
   #include <WProgram.h>
 #endif
 
-void setup(){
-  Serial.begin(115200);
+#include <Servo.h>
+Servo Manipul;
+
+void setup() {
+  Manipul.attach(3);
+  // Manipul.writeMicroseconds(2500);
 }
 
-void loop(){
-  Serial.println("/n lol /n");
-  delay(200);
+void loop() {
+  Manipul.writeMicroseconds(2200);
 }

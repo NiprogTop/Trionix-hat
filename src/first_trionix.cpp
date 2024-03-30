@@ -5,7 +5,8 @@
 #endif
 
 #include "Wire.h"
-#include <MPU6050_light.h>
+// #include <MPU6050_light.h>
+#include <TroykaIMU.h>
 #include <GyverOS.h>
 #include <SerialParser.h>
 #include <Servo.h>
@@ -16,7 +17,7 @@ Servo dr1, dr2, dr3, dr4, Manipul;
 
 #define pin1 3
 
-#define pin2 9
+#define pin2 5
 
 #define pin3 11
 
@@ -24,9 +25,10 @@ Servo dr1, dr2, dr3, dr4, Manipul;
 
 #define ledPin 6 // 5
 
-#define ServoPin 5
+#define ServoPin 9
 
-#define PARSE_AMOUNT 7
+#define PARSE_AMOUNT 6
+// #define PARSE_AMOUNT 7
 
 
 GyverOS<3> OS; 
@@ -44,20 +46,29 @@ int timr = 0;
 
 int mode = 1; // 1 - streaming
 
-MPU6050 mpu(Wire);
+// MPU6050 mpu(Wire);
+Madgwick filter;
+Gyroscope gyroscope;
+Accelerometer accelerometer;
+
+float gx, gy, gz, ax, ay, az;
+float heading, pitch, roll;
+
+float sampleRate = 25;
+
 MS5837 sensor;
 
 void initMotors(){
   dr1.attach(pin1);
-  dr1.writeMicroseconds(1480);
+  dr1.writeMicroseconds(1500);
   dr2.attach(pin2);
-  dr2.writeMicroseconds(1480);
+  dr2.writeMicroseconds(1500);
   dr3.attach(pin3);
-  dr3.writeMicroseconds(1480);
+  dr3.writeMicroseconds(1500);
   dr4.attach(pin4);
-  dr4.writeMicroseconds(1480);
-  Manipul.attach(ServoPin);
-  Manipul.writeMicroseconds(2500);
+  dr4.writeMicroseconds(1500);
+  // Manipul.attach(ServoPin);
+  // Manipul.writeMicroseconds(2500);
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, 1);
   delay(7000);
@@ -87,11 +98,11 @@ void printData()
 {
         String answer = "#3 "
                     // roll
-                    + String(mpu.getAngleY()) + " "
+                    + String(pitch) + " "
                     // pitch
-                    + String(mpu.getAngleX()) + " "
+                    + String(roll) + " "
                     // heading
-                    + String(mpu.getAngleZ()) + " "
+                    + String(heading) + " "
                     // depth
                     + String(sensor.depth() - depth_cal) + " "
                     // temp
@@ -108,7 +119,25 @@ void updateDepth()
 
 void updateIMU()
 {
-    mpu.update();
+    
+    unsigned long startMillis = millis();
+
+    // Считываем данные с акселерометра в единицах G
+    accelerometer.readAccelerationGXYZ(ax, ay, az);
+    // Считываем данные с гироскопа в радианах в секунду
+    gyroscope.readRotationRadXYZ(gx, gy, gz);
+    // Устанавливаем частоту фильтра
+    filter.setFrequency(sampleRate);
+    // Обновляем входные данные в фильтр
+    filter.update(gx, gy, gz, ax, ay, az);
+
+    heading = filter.getYawDeg();
+    pitch = filter.getPitchDeg();
+    roll = filter.getRollDeg();
+
+    unsigned long deltaMillis = millis() - startMillis;
+
+    sampleRate = 1000 / deltaMillis;
 }
 
 
@@ -125,11 +154,18 @@ void setup() {
 
   // MPU sensor activation
 
-  byte status = mpu.begin();
-  while(status!=0){ } // stop everything if could not connect to MPU6050
+//   byte status = mpu.begin();
+//   while(status!=0){ } // stop everything if could not connect to MPU6050
 
-  delay(1000);
-  mpu.calcOffsets(true,true);
+    // Инициализируем гироскоп
+    gyroscope.begin();
+    // Инициализируем акселерометр
+    accelerometer.begin();
+    // Инициализируем фильтр
+    filter.begin();
+
+    delay(1000);
+    // mpu.calcOffsets(true,true);
 
   // Depth sensor activation
 
@@ -151,11 +187,11 @@ void setup() {
 void setMotors()
 {
     int *intData = parser.getData();
-    dr1_val_new = map(intData[1], -100, 100, 1080, 1880);
-    dr2_val_new = map(intData[2], -100, 100, 1080, 1880);
-    dr3_val_new = map(intData[3], -100, 100, 1080, 1880);
-    dr4_val_new = map(intData[4], -100, 100, 1080, 1880);
-    manip_val_new = map(intData[6], 0, 100, 1800, 2500);
+    dr1_val_new = map(intData[1], -100, 100, 1100, 1900);
+    dr2_val_new = map(intData[2], -100, 100, 1100, 1900);
+    dr3_val_new = map(intData[3], -100, 100, 1100, 1900);
+    dr4_val_new = map(intData[4], -100, 100, 1100, 1900);
+    // manip_val_new = map(intData[6], 0, 100, 1800, 2500);
 
     dr1.writeMicroseconds(dr1_val_new);
 
@@ -165,7 +201,7 @@ void setMotors()
 
     dr4.writeMicroseconds(dr4_val_new);
     
-    Manipul.writeMicroseconds(manip_val_new);
+    // Manipul.writeMicroseconds(manip_val_new);
 
     if (intData[5] != ledValue) {
         ledValue = intData[5];
