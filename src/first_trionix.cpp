@@ -23,9 +23,9 @@ Servo dr1, dr2, dr3, dr4, Manipul;
 
 #define pin4 10
 
-#define ledPin 6 // 5
+// #define ledPin 6 // 5
 
-#define ServoPin 9
+// #define ServoPin 9
 
 #define PARSE_AMOUNT 6
 // #define PARSE_AMOUNT 7
@@ -34,8 +34,8 @@ Servo dr1, dr2, dr3, dr4, Manipul;
 GyverOS<3> OS; 
 SerialParser parser(PARSE_AMOUNT);
 
-int16_t dr1_val, dr2_val, dr3_val, dr4_val, manip_val;
-int16_t dr1_val_new, dr2_val_new, dr3_val_new, dr4_val_new, manip_val_new;
+int16_t dr1_val, dr2_val, dr3_val, dr4_val;
+int16_t dr1_val_new, dr2_val_new, dr3_val_new, dr4_val_new;
 int intData = 0;
 
 float depth_cal = 0; //калибровочное значение глубины
@@ -69,10 +69,10 @@ void initMotors(){
   dr4.writeMicroseconds(1500);
   // Manipul.attach(ServoPin);
   // Manipul.writeMicroseconds(2500);
-  pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, 1);
+  // pinMode(ledPin, OUTPUT);
+  // digitalWrite(ledPin, 1);
   delay(7000);
-  digitalWrite(ledPin, 0);
+  // digitalWrite(ledPin, 0);
 }
 
 
@@ -203,10 +203,10 @@ void setMotors()
     
     // Manipul.writeMicroseconds(manip_val_new);
 
-    if (intData[5] != ledValue) {
-        ledValue = intData[5];
-        analogWrite(ledPin, ledValue);
-    }
+    // if (intData[5] != ledValue) {
+    //     ledValue = intData[5];
+    //     analogWrite(ledPin, ledValue);
+    // }
 }
 
 

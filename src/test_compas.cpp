@@ -21,18 +21,18 @@ void setup()
     delay(500);
   }
 
-  if(compass.isHMC())
-  {
-    Serial.println("Initialize HMC5883");
-  }
-  else if(compass.isQMC())
-  {
-    Serial.println("Initialize QMC5883");
-  }
-  else if(compass.isVCM())
-  {
-    Serial.println("Initialize VCM5883L");
-  }
+  // if(compass.isHMC())
+  // {
+  //   Serial.println("Initialize HMC5883");
+  // }
+  // else if(compass.isQMC())
+  // {
+  //   Serial.println("Initialize QMC5883");
+  // }
+  // else if(compass.isVCM())
+  // {
+  //   Serial.println("Initialize VCM5883L");
+  // }
   delay(1000);
   float declinationAngle = (4.0 + (26.0 / 60.0)) / (180 / PI);
   compass.setDeclinationAngle(declinationAngle);
