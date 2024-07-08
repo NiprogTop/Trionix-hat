@@ -12,15 +12,15 @@
 Servo dr1, dr2, dr3, dr4, dr5;
 
 
-#define pin1 6
+#define pin1 6 // 4
 
-#define pin2 5
+#define pin2 5 // 3
 
-#define pin3 3
+#define pin3 3 // 5
 
-#define pin4 9
+#define pin4 9 // 1
 
-#define pin5 10
+#define pin5 10 // 2
 
 #define PARSE_AMOUNT 6
 // #define PARSE_AMOUNT 7
@@ -109,11 +109,11 @@ void setMotors()
      int *intData = parser.getData();
 //     dr1_val_new = map(intData[0], 0, 100, 45, );
 //     dr2_val_new = map(intData[1], 0, 100, 460, 2460);
-     dr1_val_new = intData[0] * -1 + cen_ang_1;
-     dr2_val_new = intData[1] * -1 + cen_ang_2;
-     dr3_val_new = intData[2] * -1 + cen_ang_3;
-     dr4_val_new = intData[3] * -1 + cen_ang_4;
-     dr5_val_new = intData[4] * -1 + cen_ang_5;
+     dr1_val_new = intData[3] * -1 + cen_ang_1;
+     dr2_val_new = intData[2] * -1 + cen_ang_2;
+     dr3_val_new = intData[4] * -1 + cen_ang_3;
+     dr4_val_new = intData[1] * -1 + cen_ang_4;
+     dr5_val_new = intData[0] * -1 + cen_ang_5;
      // manip_val_new = map(intData[6], 0, 100, 1800, 2500);
 
      dr1.write(dr1_val_new);
@@ -126,7 +126,7 @@ void setMotors()
 
      dr5.write(dr5_val_new);
 
-    Serial.println(dr2_val_new);
+    // Serial.println(dr2_val_new);
     // delay(200);
 }
 
