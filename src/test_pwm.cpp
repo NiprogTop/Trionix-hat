@@ -30,9 +30,13 @@ void setup(){
    myservo1.write(1500);
    myservo2.attach(5);
    myservo2.write(1500);
-   myservo3.attach(9);
+   myservo3.attach(5);
    myservo3.write(1500);
+<<<<<<< HEAD
    myservo4.attach(3);
+=======
+   myservo4.attach(9);
+>>>>>>> 1f226e96b2430bb8014fc8cd56bcfce9198cbc13
    myservo4.write(1500);
    myservo5.attach(10);
    myservo5.write(1500);
@@ -41,6 +45,7 @@ void setup(){
 } 
 
 void loop(){
+<<<<<<< HEAD
  myservo1.writeMicroseconds(1400);
  myservo2.writeMicroseconds(1400);
  myservo3.writeMicroseconds(1400);
@@ -65,6 +70,31 @@ void loop(){
 
  delay(4000);
 
+=======
+ myservo1.write(1480);
+ myservo2.write(1480);
+ myservo3.write(1480);
+ myservo4.write(1480);
+ myservo5.write(1480);
+
+ delay(5000);
+
+ myservo1.write(1400);
+ myservo2.write(1400);
+ myservo3.write(1400);
+ myservo4.write(1400);
+ myservo5.write(1400);
+
+ delay(1000);
+
+ myservo1.write(1200);
+ myservo2.write(1200);
+ myservo3.write(1200);
+ myservo4.write(1200);
+ myservo5.write(1200);
+
+ delay(5000);
+>>>>>>> 1f226e96b2430bb8014fc8cd56bcfce9198cbc13
 }
 
 
