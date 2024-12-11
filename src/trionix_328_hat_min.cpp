@@ -26,7 +26,7 @@ Servo dr1, dr2, dr3, dr4, Manipul;
 
 #define ServoPin 5
 
-#define PARSE_AMOUNT 6
+#define PARSE_AMOUNT 7
 // #define PARSE_AMOUNT 7
 
 

@@ -15,7 +15,6 @@
 //  #######   PWM_TEST   #########
 
 
-
 #include <Servo.h>
 
 // создаём объекты для управления сервоприводами
@@ -29,24 +28,43 @@ void setup(){
 //    Serial.begin(9600);
    myservo1.attach(6);
    myservo1.write(1500);
-   myservo2.attach(3);
+   myservo2.attach(5);
    myservo2.write(1500);
    myservo3.attach(9);
    myservo3.write(1500);
-   myservo4.attach(11);
+   myservo4.attach(3);
    myservo4.write(1500);
    myservo5.attach(10);
    myservo5.write(1500);
-   delay(7000);
+   delay(10000);
    
 } 
 
 void loop(){
- myservo1.write(1600);
- myservo2.write(1600);
- myservo3.write(1600);
- myservo4.write(1600);
- myservo5.write(1600);
+ myservo1.writeMicroseconds(1400);
+ myservo2.writeMicroseconds(1400);
+ myservo3.writeMicroseconds(1400);
+ myservo4.writeMicroseconds(1400);
+ myservo5.writeMicroseconds(1400);
+
+ delay(4000);
+
+ myservo1.writeMicroseconds(1500);
+ myservo2.writeMicroseconds(1500);
+ myservo3.writeMicroseconds(1500);
+ myservo4.writeMicroseconds(1500);
+ myservo5.writeMicroseconds(1500);
+
+ delay(4000);
+
+ myservo1.writeMicroseconds(1100);
+ myservo2.writeMicroseconds(1300);
+ myservo3.writeMicroseconds(1300);
+ myservo4.writeMicroseconds(1300);
+ myservo5.writeMicroseconds(1300);
+
+ delay(4000);
+
 }
 
 

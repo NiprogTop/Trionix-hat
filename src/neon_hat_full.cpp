@@ -20,7 +20,7 @@
 #include "MS5837.h"
 #include <FastLED.h>
 #include <DFRobot_QMC5883.h>
-// #include "GyverFilters.h"
+#include "GyverFilters.h"
 
 // GMedian3<int> Filter; 
 // GKalman Filter(4, 0.01);
@@ -43,8 +43,8 @@ Servo dr1, dr2, dr3, dr4, dr5, dr6;
 #define PARSE_AMOUNT 7
 
 #define LED_PIN 4
-#define BRIGHTNESS 200
-#define NUM_LEDS 1
+#define BRIGHTNESS 250
+#define NUM_LEDS 4
 CRGB leds[NUM_LEDS];
 int led_mode = 1;
 int led_status = 0;
@@ -53,10 +53,7 @@ int targetHeading = 340;
 
 GyverOS<4> OS; 
 SerialParser parser(PARSE_AMOUNT);
-DFRobot_QMC5883 compass_2(&Wire, QMC5883_ADDRESS); /* I2C addr */
-DFRobot_QMC5883 compass_1(&Wire, HMC5883L_ADDRESS); /* I2C addr */
-DFRobot_QMC5883 compass;
-int compass_type = 0;
+DFRobot_QMC5883 compass(&Wire, QMC5883_ADDRESS); /* I2C addr */
 
 
 int16_t dr1_val, dr2_val, dr3_val, dr4_val, dr5_val, dr6_val;
@@ -75,49 +72,6 @@ int mode = 1; // 1 - streaming
 MPU6050 mpu(Wire);
 MS5837 sensor;
 sVector_t mag;
-
-
-void Check_i2c(void){
-  byte error, address;
-  int nDevices;
-
-  Serial.println("Scanning...");
-
-  nDevices = 0;
-  for(address = 1; address < 127; address++ ) 
-  {
-    // The i2c_scanner uses the return value of
-    // the Write.endTransmisstion to see if
-    // a device did acknowledge to the address.
-    Wire.beginTransmission(address);
-    error = Wire.endTransmission();
-
-    if (error == 0)
-    {
-      // Serial.print("I2C device found at address 0x");
-      // if (address<16) 
-      //   Serial.print("0");
-      if (String(address,HEX) == String(13,HEX) && compass_type == 0){
-        compass_type = 1;
-      }
-      // Serial.println((address,HEX));
-      // Serial.println("  !");
-
-      nDevices++;
-    }
-    else if (error==4) 
-    {
-      Serial.print("Unknown error at address 0x");
-      if (address<16) 
-        Serial.print("0");
-      Serial.println(address,HEX);
-    }    
-  }
-  if (nDevices == 0)
-    Serial.println("No I2C devices found\n");
-  else
-    Serial.println("done\n");
-}
 
 void initMotors(){
   dr1.attach(pin1);
@@ -193,89 +147,10 @@ void updateIMU()
 }
 
 
-// double calculateTargetHeading(float currentHead) {
-//   if(targetHeading < 90 && currentHead > 180){
-//       return targetHeading + 360;
-//   }
-//   else if(targetHeading > 270 && currentHead < 180){
-//       return targetHeading - 360;
-//   }
-//   else {
-//       return targetHeading;
-//   }      
-// } 
-
-// double targetHeading;
-// double manualTurnMultiplier;
-
-// double calculateTargetHeading(double currentHead, int controlMsg) {
-//   if (controlMsg > 0.05 || controlMsg < -0.05) {
-//       targetHeading += manualTurnMultiplier * controlMsg;
-
-//       if (targetHeading > 360) {
-//           targetHeading -= 360;
-//       } else if (targetHeading < 0) {
-//           targetHeading += 360;
-//       }
-
-//       if ((targetHeading < 90 && targetHeading > 0) && (currentHead > 270 && currentHead < 360)) {
-//           targetHeading += 360;
-//       }
-//       if ((targetHeading > 270 && targetHeading < 360) && (currentHead < 90 && currentHead > 0)) {
-//           targetHeading -= 360;
-//       }
-
-//       return targetHeading;
-//   } else {
-//       if (targetHeading < 90 && currentHead > 180) {
-//           return targetHeading + 360;
-//       } else if (targetHeading > 270 && currentHead < 180) {
-//           return targetHeading - 360;
-//       } else {
-//           return targetHeading;
-//       }
-//   }
-// }
-
 
 void updateCompass()
 {
-    // mpu.update();
-
-    // mag = compass.readRaw();
-    // sVector_t mag = compass.readRaw();
-    // compass.getHeadingDegrees();
-    // heading = mag.HeadingDegress;
-    
-    compass.setDeclinationAngle(declinationAngle);
-    mag = compass.readRaw();
-    compass.getHeadingDegrees();
-    heading = mag.HeadingDegress;
-
-    // float acsZ = mpu.getAccZ();
-    // if (acsZ - 1 != 0)
-    // {
-    //   // float head_1 = ( (heading - mag.HeadingDegress * (mpu.getAccZ() - 1) * 10);
-    //   if (acsZ - 1.00 > 0){
-    //     heading = heading + mag.HeadingDegress;
-    //   }
-    //   else {
-    //     heading = heading - mag.HeadingDegress;
-    //   }
-    //   // heading = heading * (mpu.getAccZ() - 1) * 10;
-    //   // heading = heading - (mag.HeadingDegress - heading * (mpu.getAccZ() - 1) * 10);
-    // }
-    // // else{
-    // //   heading = 0;
-    // // }
-
-    // heading = acsZ - 1.00;
-    // heading = mag.HeadingDegress;
-    // heading = heading + (mag.HeadingDegress - heading * (mpu.getAccZ() - 1));
-    // heading = mag.AngleXZ;
-
-    // heading_p = calculateTargetHeading(heading);
-
+    heading = 0;
 }
 
 
@@ -285,18 +160,43 @@ void LED_update(){
   if (led_mode == 0){
     if (led_status == 0){
       leds[0] = CRGB::Black;
+      leds[1] = CRGB::Black;
+      leds[2] = CRGB::Black;
+      leds[3] = CRGB::Black;
       FastLED.show();
       led_status = 1;
     }
     else{
       leds[0] = CRGB::Blue;
+      leds[1] = CRGB::Blue;
+      leds[2] = CRGB::Blue;
+      leds[3] = CRGB::Blue;
       FastLED.show();
       led_status = 0;
     }
   }
   else if (led_mode == 1){
-    leds[0] = CRGB::Green;
+        if (led_status == 0){
+      leds[0] = CRGB::LightSkyBlue;
+      leds[1] = CRGB::LightSkyBlue;
+      leds[2] = CRGB::LightSkyBlue;
+      leds[3] = CRGB::LightSkyBlue;
       FastLED.show();
+      led_status = 1;
+    }
+    else{
+      leds[0] = CRGB::Navy;
+      leds[1] = CRGB::Navy;
+      leds[2] = CRGB::Navy;
+      leds[3] = CRGB::Navy;
+      FastLED.show();
+      led_status = 0;
+    }
+    // leds[0] = CRGB::Navy;
+    // leds[1] = CRGB::Navy;
+    // leds[2] = CRGB::Navy;
+    // leds[3] = CRGB::Navy;
+    // FastLED.show();
   }
   // leds[0] = CRGB::Black;
   // FastLED.show();
@@ -307,15 +207,11 @@ double normalizeCompassData(double rawCourse) {
 }
 
 
-void setup() {  
+void setup() {
   pinMode(2, OUTPUT); // activate level comunication
   digitalWrite(2, HIGH);
 
   Serial.begin(115200);
-  while (!Serial)
-    delay(10);
-
-  
   Wire.begin();
 
   
@@ -328,18 +224,24 @@ void setup() {
   FastLED.clear();
 
   leds[0] = CRGB::Yellow;
+
   FastLED.show();
 
 
   initMotors();
+  leds[1] = CRGB::Olive;
+  FastLED.show();
+  delay(2000);
   
   // #####     MPU sensor activation   #####
 
   byte status = mpu.begin();
   while(status!=0){ } // stop everything if could not connect to MPU6050
-
-  delay(1000);
+  leds[2] = CRGB::Olive;
+  FastLED.show();
+  delay(2000);
   mpu.calcOffsets(true,true);
+
 
   // #####   Depth sensor activation  #####
 
@@ -347,25 +249,21 @@ void setup() {
     delay(1000);
   }
 
-  sensor.setModel(MS5837::MS5837_02BA);
+  sensor.setModel(MS5837::MS5837_30BA);
   sensor.setFluidDensity(997);
-  
+
   updateDepth();
   depth_cal = sensor.depth(); //калибровка глубины в самом начале работы
 
   // #####   Compas sensor activation  #####
-
-  Check_i2c();
-
-  if (compass_type == 1){compass = compass_2;}
-  else {compass = compass_1;}
 
   while (!compass.begin())
   {
     Serial.println("Could not find a valid 5883 sensor, check wiring!");
     delay(500);
   }
-  // compass.begin();
+  leds[3] = CRGB::Olive;
+  FastLED.show();
 
   // float declinationAngle = (4.0 + (26.0 / 60.0)) / (180 / PI);
   // compass.setDeclinationAngle(declinationAngle);
@@ -374,7 +272,7 @@ void setup() {
   OS.attach(0, updateDepth, 120);
   OS.attach(1, printData, 50);
   OS.attach(2, updateCompass, 300);
-  OS.attach(3, LED_update, 800);
+  OS.attach(3, LED_update, 1000);
 
   straeming();
 }

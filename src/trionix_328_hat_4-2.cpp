@@ -14,15 +14,15 @@
 Servo dr1, dr2, dr3, dr4, Manipul;
 
 
-#define pin1 3
+#define pin1 6
 
-#define pin2 9
+#define pin2 5
 
 #define pin3 10
 
 #define pin4 11
 
-#define ledPin 6 // 5
+#define ledPin 3 // 5
 
 // #define ServoPin 5
 
@@ -56,8 +56,6 @@ void initMotors(){
   dr3.writeMicroseconds(1480);
   dr4.attach(pin4);
   dr4.writeMicroseconds(1480);
-  // Manipul.attach(ServoPin);
-  // Manipul.writeMicroseconds(2500);
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, 1);
   delay(7000);
@@ -115,8 +113,8 @@ void updateIMU()
 
 
 void setup() {
-  pinMode(2, OUTPUT); // activate level comunication
-  digitalWrite(2, HIGH);
+  // pinMode(2, OUTPUT); // activate level comunication
+  // digitalWrite(2, HIGH);
 
   Serial.begin(115200);
   Wire.begin();
@@ -137,7 +135,7 @@ void setup() {
     delay(1000);
   }
 
-  sensor.setModel(MS5837::MS5837_30BA);
+  sensor.setModel(MS5837::MS5837_02BA);
   sensor.setFluidDensity(997);
 
   updateDepth();

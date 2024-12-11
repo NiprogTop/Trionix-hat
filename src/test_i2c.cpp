@@ -42,11 +42,12 @@ void loop() {
 
     if (error == 0)
     {
-      Serial.print("I2C device found at address 0x");
-      if (address<16) 
-        Serial.print("0");
-      Serial.print(address,HEX);
-      Serial.println("  !");
+      // Serial.print("I2C device found at address 0x");
+      // if (address<16) 
+      //   Serial.print("0");
+      Serial.println( String(address,HEX) == String(13,HEX));
+      // Serial.println(type(address));
+      // Serial.println("  !");
 
       nDevices++;
     }
