@@ -57,6 +57,6 @@ void loop()
   Serial.print(" Z:");
   Serial.println(mag.ZAxis);
   Serial.print("Degress = ");
-  Serial.println(mag.HeadingDegress);
+  Serial.println(int(mag.HeadingDegress)* 3 % 360);
   delay(100);
 }

@@ -1,0 +1,52 @@
+#	####################################################
+#	СИНТАКСИЧЕСКАЯ РАСКРАСКА ДЛЯ БИБИЛИОТЕКИ:
+#	iarduino_I2C_Motor
+#	####################################################
+#	ТИПЫ ДАННЫХ:							   (KEYWORD1)
+	iarduino_I2C_Motor	KEYWORD1
+#	####################################################
+#	МЕТОДЫ И ФУНКЦИИ:						   (KEYWORD2)
+	begin	KEYWORD2
+	changeAddress	KEYWORD2
+	reset	KEYWORD2
+	radius	KEYWORD2
+	getAddress	KEYWORD2
+	getVersion	KEYWORD2
+	getPullI2C	KEYWORD2
+	setPullI2C	KEYWORD2
+	setFreqPWM	KEYWORD2
+	setMagnet	KEYWORD2
+	getMagnet	KEYWORD2
+	setReducer	KEYWORD2
+	getReducer	KEYWORD2
+	setError	KEYWORD2
+	getError	KEYWORD2
+	setRadius	KEYWORD2
+	getRadius	KEYWORD2
+	setSpeed	KEYWORD2
+	getSpeed	KEYWORD2
+	setStop	KEYWORD2
+	getStop	KEYWORD2
+	setStopNeutral	KEYWORD2
+	getStopNeutral	KEYWORD2
+	setDirection	KEYWORD2
+	getDirection	KEYWORD2
+	setInvGear	KEYWORD2
+	getInvGear	KEYWORD2
+	getSum	KEYWORD2
+	delSum	KEYWORD2
+	setVoltage	KEYWORD2
+	getVoltage	KEYWORD2
+	setNominalRPM	KEYWORD2
+	getNominalRPM	KEYWORD2
+	saveManufacturer	KEYWORD2
+#	####################################################
+#	КОНСТАНТЫ:								   (LITERAL1)
+	MOT_MET	LITERAL1
+	MOT_SEC	LITERAL1
+	MOT_M_S	LITERAL1
+	MOT_REV	LITERAL1
+	MOT_RPM	LITERAL1
+	MOT_PWM	LITERAL1
+	MOT_ERR_SPD	LITERAL1
+	MOT_ERR_DRV	LITERAL1

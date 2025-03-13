@@ -20,9 +20,9 @@
 #include "MS5837.h"
 #include <FastLED.h>
 #include <DFRobot_QMC5883.h>
-// #include "GyverFilters.h"
+#include "GyverFilters.h"
 
-// GMedian3<int> Filter; 
+GMedian3<int> Filter; 
 // GKalman Filter(4, 0.01);
 
 Servo dr1, dr2, dr3, dr4, dr5, dr6;
@@ -54,7 +54,7 @@ int targetHeading = 340;
 GyverOS<4> OS; 
 SerialParser parser(PARSE_AMOUNT);
 DFRobot_QMC5883 compass_2(&Wire, QMC5883_ADDRESS); /* I2C addr */
-DFRobot_QMC5883 compass_1(&Wire, HMC5883L_ADDRESS); /* I2C addr */
+DFRobot_QMC5883 compass_1(&Wire, QMC5883_ADDRESS); /* I2C addr */
 DFRobot_QMC5883 compass;
 int compass_type = 0;
 
@@ -64,6 +64,8 @@ int16_t dr1_val_new, dr2_val_new, dr3_val_new, dr4_val_new, dr5_val_new, dr6_val
 int intData = 0;
 
 float depth_cal = 0; //калибровочное значение глубины
+float depth = 0.0;
+float depth_t = 0.0;
 
 int timr = 0;
 int heading = 0;
@@ -86,22 +88,14 @@ void Check_i2c(void){
   nDevices = 0;
   for(address = 1; address < 127; address++ ) 
   {
-    // The i2c_scanner uses the return value of
-    // the Write.endTransmisstion to see if
-    // a device did acknowledge to the address.
     Wire.beginTransmission(address);
     error = Wire.endTransmission();
 
     if (error == 0)
     {
-      // Serial.print("I2C device found at address 0x");
-      // if (address<16) 
-      //   Serial.print("0");
       if (String(address,HEX) == String(13,HEX) && compass_type == 0){
         compass_type = 1;
       }
-      // Serial.println((address,HEX));
-      // Serial.println("  !");
 
       nDevices++;
     }
@@ -170,7 +164,7 @@ void printData()
                     + String(heading) + " "
                     // + String(Filter.filtered(heading)) + " "
                     // depth
-                    + String(sensor.depth() - depth_cal) + " "
+                    + String((Filter.filtered(depth * 100))* 0.01 - depth_cal) + " "
                     // temp
                     + String(sensor.temperature()) + ";";
                     // BatLevel
@@ -185,6 +179,9 @@ void printData()
 void updateDepth()
 {
     sensor.read();
+    depth_t = sensor.depth();
+    if (-1.0 <= depth_t && depth_t <= 30.0){
+      depth = depth_t;}
 }
 
 void updateIMU()
@@ -250,7 +247,10 @@ void updateCompass()
     compass.setDeclinationAngle(declinationAngle);
     mag = compass.readRaw();
     compass.getHeadingDegrees();
-    heading = mag.HeadingDegress;
+    heading = int(mag.HeadingDegress) * 5 % 360;
+    // heading = mag.HeadingDegress;
+    // heading = 55;
+
 
     // float acsZ = mpu.getAccZ();
     // if (acsZ - 1 != 0)
@@ -372,7 +372,7 @@ void setup() {
 
 
   OS.attach(0, updateDepth, 120);
-  OS.attach(1, printData, 50);
+  OS.attach(1, printData, 120);
   OS.attach(2, updateCompass, 300);
   OS.attach(3, LED_update, 800);
 

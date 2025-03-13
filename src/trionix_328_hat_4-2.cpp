@@ -135,7 +135,7 @@ void setup() {
     delay(1000);
   }
 
-  sensor.setModel(MS5837::MS5837_02BA);
+  sensor.setModel(MS5837::MS5837_30BA);
   sensor.setFluidDensity(997);
 
   updateDepth();
