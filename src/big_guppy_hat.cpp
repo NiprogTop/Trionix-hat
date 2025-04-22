@@ -53,8 +53,8 @@ int targetHeading = 340;
 
 GyverOS<4> OS; 
 SerialParser parser(PARSE_AMOUNT);
-DFRobot_QMC5883 compass_2(&Wire, QMC5883_ADDRESS); /* I2C addr */
-DFRobot_QMC5883 compass_1(&Wire, QMC5883_ADDRESS); /* I2C addr */
+DFRobot_QMC5883 compass_2(&Wire, HMC5883L_ADDRESS); /* I2C addr */
+DFRobot_QMC5883 compass_1(&Wire, HMC5883L_ADDRESS); /* I2C addr */
 DFRobot_QMC5883 compass;
 int compass_type = 0;
 

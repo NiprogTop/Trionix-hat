@@ -9,11 +9,24 @@ void setup() {
   Serial.begin(115200);
 
 }
+// String parseSDDBT(String sentence) {
+//   // Split the sentence into parts based on commas
+//   int commaIndex1 = sentence.indexOf(',');
+//   int commaIndex2 = sentence.indexOf(',', commaIndex1 + 1);
+//   int commaIndex3 = sentence.indexOf(',', commaIndex2 + 1);
+//   int commaIndex4 = sentence.indexOf(',', commaIndex3 + 1);
+//   int commaIndex5 = sentence.indexOf(',', commaIndex4 + 1);
 
+//   // Extract the depth in meters (between the 4th and 5th commas)
+//   String depthStr = sentence.substring(commaIndex3+1, commaIndex4);
+
+//   // Convert the depth string to a float
+//   return depthStr;
+// }
 String parseSDDBT(String sentence) {
   if (sentence.startsWith("$SDDBT")) {
       // Parse the NMEA sentence
-      Serial.println(sentence);
+      // Serial.println(sentence);
         int commaIndex1 = sentence.indexOf(',');
         int commaIndex2 = sentence.indexOf(',', commaIndex1 + 1);
         int commaIndex3 = sentence.indexOf(',', commaIndex2 + 1);
@@ -39,29 +52,15 @@ void loop() {
     if (nmeaSentence.startsWith("$SDDBT")) {
       // Parse the NMEA sentence
       String depthMeters = parseSDDBT(nmeaSentence);
-      Serial.println(nmeaSentence);
+      // Serial.println(nmeaSentence);
 
       //Print the depth in meters to the Serial monitor
       //if (depthMeters >= 0) {
-        Serial.print("Depth: ");
-        Serial.print(depthMeters);
-        Serial.println(" meters");
+        // Serial.print("Depth: ");
+        Serial.println(depthMeters);
+        // Serial.println(" meters");
      
     }
   }
 }
 
-String parseSDDBT(String sentence) {
-  // Split the sentence into parts based on commas
-  int commaIndex1 = sentence.indexOf(',');
-  int commaIndex2 = sentence.indexOf(',', commaIndex1 + 1);
-  int commaIndex3 = sentence.indexOf(',', commaIndex2 + 1);
-  int commaIndex4 = sentence.indexOf(',', commaIndex3 + 1);
-  int commaIndex5 = sentence.indexOf(',', commaIndex4 + 1);
-
-  // Extract the depth in meters (between the 4th and 5th commas)
-  String depthStr = sentence.substring(commaIndex3+1, commaIndex4);
-
-  // Convert the depth string to a float
-  return depthStr;
-}

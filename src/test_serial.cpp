@@ -1,290 +1,257 @@
-/*
-Протокол из Arduino:
-#0 [msg]- сервисное сообщение
-#1 [1 23 44 55] - значение датчиков
-#2 [msg_with_underscore] - debug сообщение
+#if defined(ARDUINO) && ARDUINO >= 100
+  #include <Arduino.h>
+#else
+  #include <WProgram.h>
+#endif
 
-Протокол в Arduino (режимы работы)
-$1 - старт стриминга данных датчиков
-$2 - калибровка
-$3 - установка моторов
-
-Калибровка https://github.com/hideakitai/MPU9250/blob/master/examples/calibration_eeprom/calibration_eeprom.ino
-*/
-
-#include <Arduino.h>
-
-#include <SerialParser.h>
 #include "Wire.h"
-#include <MPU6050_light.h>
-// #include "MPU9250.h"
 #include <GyverOS.h>
+#include <SerialParser.h>
 #include <Servo.h>
-// #include "eeprom_utils.h"
-#include "MS5837.h"
-// #include <Servo_Hardware_PWM.h>
+#include <TroykaGPS.h>
+#include <GY_85.h>
+#include <DFRobot_QMC5883.h>
 
-#define PARSE_AMOUNT 6
+Servo dr1, dr2, Manipul;
 
-//front
+
 #define pin1 3
-//right
-#define pin2 9
-//back
-#define pin3 11
-//left
-#define pin4 10
-// //servo front
-// #define s_pin1 11
-// //servo right
-// #define s_pin2 10
-// //servo back
-// #define s_pin3 12
-// //servo left
-// #define s_pin4 13
-//light
-#define ledPin 5
 
-Servo m1, m2, m3, m4;
-Servo s1, s2, s3, s4;
+#define pin2 2
+
+#define ledPin 7 // 5
+
+#define GPS_SERIAL Serial3
+
+#define PARSE_AMOUNT 5
+// #define PARSE_AMOUNT 7
+
+GY_85 GY85;
+// int ax=0;
+// int ay=0;
+// int az =0;
+int gx;
+int gy;
+int gz;
+
+GPS gps(GPS_SERIAL);
+// задаём размер массива для времени, даты, широты и долготы
+#define MAX_SIZE_MASS 16
+// массив для хранения текущего времени
+char strTime[MAX_SIZE_MASS];
+// массив для хранения текущей даты
+char strDate[MAX_SIZE_MASS];
+// массив для хранения широты в градусах, минутах и секундах
+char latitudeBase60[MAX_SIZE_MASS];
+// массив для хранения долготы в градусах, минутах и секундах
+char longitudeBase60[MAX_SIZE_MASS];
 
 
-int m1_val, m2_val, m3_val, m4_val;
+DFRobot_QMC5883 compass(&Wire, QMC5883_ADDRESS); /* I2C addr */
+int heading = 0;
+float declinationAngle = (12.0 + (11.0 / 60.0)) / (180 / PI);
+sVector_t mag;
+
+
+GyverOS<3> OS; 
+SerialParser parser(PARSE_AMOUNT);
+
+int16_t dr1_val, dr2_val, manip_val;
+int16_t dr1_val_new, dr2_val_new, manip_val_new;
+int intData = 0;
 
 int ledValue = 0;
 
-GyverOS<3> OS; // указать макс. количество задач
-// MPU9250 mpu;
-MPU6050 mpu(Wire);
-SerialParser parser(PARSE_AMOUNT);
+int timr = 0;
 
-//БЛОК параметров датчика давления
-MS5837 sensor;
-float depth_cal = 0; //калибровочное значение глубины
+int mode = 1; // 1 - streaming
 
-int mode = 1; // 1 - streaming,  2 - calibration
-
-void attach_pins()
-{
-  m1.attach(pin2);
-  m1.writeMicroseconds(1500); // send "stop" signal to ESC.
-  m2.attach(pin3);
-  m2.writeMicroseconds(1500);
-  m3.attach(pin1);
-  m3.writeMicroseconds(1500);
-  m4.attach(pin4);
-  m4.writeMicroseconds(1500);
-
-  //    s1.attach(s_pin1);
-  //    s2.attach(s_pin2);
-  //    s3.attach(s_pin3);
-  //    s4.attach(s_pin4);
-
+void initMotors(){
+  dr1.attach(pin1);
+  dr1.writeMicroseconds(1480);
+  dr2.attach(pin2);
+  dr2.writeMicroseconds(1480);
+  // Manipul.attach(ServoPin);
+  // Manipul.writeMicroseconds(2500);
   pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, 1);
+  delay(7000);
+  digitalWrite(ledPin, 0);
 }
 
-// void setDefaultIMUValues()
-// {
-//     mpu.setAccBias(0., 0., 0.);
-//     mpu.setGyroBias(0., 0., 0.);
-//     mpu.setMagBias(0., 0., 0.);
-//     mpu.setMagScale(1., 1., 1.);
-// }
 
 void printServiceMsg(String msg)
 {
-    Serial.print("#0 " + msg + ";");
-    
-}
-
-void printDebugMsg(String msg) {
-     Serial.print("#2 " + msg + ";");
+    Serial.print("#0 " + msg + ";");    
 }
 
 void stopStreaming()
 {
-    OS.stop(0);
+    // OS.stop(0);
     OS.stop(1);
+    // OS.stop(2);
 }
 
 void straeming()
 {
     mode = 1;
-    OS.start(0);
+    // OS.start(0);
     OS.start(1);
+    // OS.start(2);
 }
 
 void printData()
 {
         String answer = "#3 "
+                    // // roll
+                    + String(gy) + " "
+                    // pitch
+                    + String(gx) + " "
                     // heading
-                    + String(mpu.getAngleY()) + " "
-                    + String(m1_val) + " "
-                    // roll
-                    + String(mpu.getAngleX()) + " "
-                    // heading
-                    + String(mpu.getAngleZ()) + " "
-                    // depth
-                    + String(sensor.depth() - depth_cal) + " "
+                    // + String(mpu.getAngleZ()) + ";";
+                    + String(heading) + ";";
+
+                    // +String(GPS_data)
                     // temp
-                    + String(sensor.temperature()) + ";";
+                    // + String(sensor.temperature()) + ";";
+                    // end
 
         Serial.println(answer);
-    
 }
 
-void updateDepth()
-{
-    sensor.read();
+void updateGPS(){
+        // если пришли данные с GPS-модуля
+    if (gps.available()) {
+        // считываем данные и парсим
+        gps.readParsing();
+        // проверяем состояние GPS-модуля
+        switch (gps.getState()) {
+        // всё OK
+        case GPS_OK:
+            Serial.println("GPS is OK");
+            // выводим координаты широты и долготы
+            // 1. в градусах, минутах и секундах
+            // 2. градусах в виде десятичной дроби
+            Serial.println("GPS Coordinates: ");
+            gps.getLatitudeBase60(latitudeBase60, MAX_SIZE_MASS);
+            gps.getLongitudeBase60(longitudeBase60, MAX_SIZE_MASS);
+            Serial.print("Latitude\t");
+            Serial.print(latitudeBase60);
+            Serial.print("\t\t");
+            Serial.println(gps.getLatitudeBase10(), 6);
+            Serial.print("Longitude\t");
+            Serial.print(longitudeBase60);
+            Serial.print("\t\t");
+            Serial.println(gps.getLongitudeBase10(), 6);
+            // выводим количество видимых спутников
+            Serial.print("Sat: ");
+            Serial.println(gps.getSat());
+            // выводим текущую скорость
+            Serial.print("Speed: ");
+            Serial.println(gps.getSpeedKm());
+            // выводим высоту над уровнем моря
+            Serial.print("Altitude: ");
+            Serial.println(gps.getAltitude());
+            // выводим текущее время
+            Serial.print("Time: ");
+            gps.getTime(strTime, MAX_SIZE_MASS);
+            gps.getDate(strDate, MAX_SIZE_MASS);
+            Serial.write(strTime);
+            Serial.println();
+            // выводим текущую дату
+            Serial.print("Date: ");
+            Serial.write(strDate);
+            Serial.println("\r\n");
+            // каждую переменную дату и времени можно выводить отдельно
+            /*    Serial.print(gps.getHour());
+                  Serial.print(gps.getMinute());
+                  Serial.print(gps.getSecond());
+                  Serial.print(gps.getDay());
+                  Serial.print(gps.getMonth());
+                  Serial.print(gps.getYear());
+            */
+            break;
+        // ошибка данных
+        case GPS_ERROR_DATA:
+            Serial.println("GPS error data");
+            break;
+        // нет соединения со спутниками
+        case GPS_ERROR_SAT:
+            Serial.println("GPS is not connected to satellites!!!");
+            break;
+        }
+    }
+}
+
+void updateCompass()
+{    
+    compass.setDeclinationAngle(declinationAngle);
+    mag = compass.readRaw();
+    compass.getHeadingDegrees();
+    heading = mag.HeadingDegress;
 }
 
 void updateIMU()
 {
-    mpu.update();
+    int* accelerometerReadings = GY85.readFromAccelerometer();
+    gx = GY85.accelerometer_x(accelerometerReadings);
+    gy = GY85.accelerometer_y(accelerometerReadings);
+    gz = GY85.accelerometer_z(accelerometerReadings);
+
 }
 
-void setup()
-{
-    pinMode(2, OUTPUT); // activate level comunication
-    digitalWrite(2, HIGH);
-    
-    Serial.begin(115200);
-    Wire.begin();
-    attach_pins();
 
-    analogWrite(ledPin, 120);
-    
-    delay(2000);
-    // MPU sensor activation
 
-    byte status = mpu.begin();
-    while(status!=0){ } // stop everything if could not connect to MPU6050
 
-    delay(1000);
-    mpu.calcOffsets(true,true);
+void setup() {
+  pinMode(2, OUTPUT); // activate level comunication
+  digitalWrite(2, HIGH);
 
-    while (!sensor.init())
-    {
-        printServiceMsg("Depth_sensor_init_failed!");
-        delay(1000);
-    }
+  Serial.begin(115200);
+  Wire.begin();
 
-#if defined(ESP_PLATFORM) || defined(ESP8266)
-    EEPROM.begin(0x80);
-#endif
+  initMotors();
 
-    // delay(5000);
 
-    sensor.setModel(MS5837::MS5837_30BA);
-    sensor.setFluidDensity(997); // kg/m^3 (freshwater, 1029 for seawater)
 
-    // sensor.full_read();
-    depth_cal = sensor.depth(); //калибровка глубины в самом начале работы
-
-    printServiceMsg("Started");
-
-    // if (isCalibrated())
-    // {
-    //     printServiceMsg("IMU_calibrated");
-    // }
-    // else
-    // {
-    //     printServiceMsg("IMU_not_calibrated");
-    // }
-
-    delay(1000);
-
-    analogWrite(ledPin, 0);
-
-    OS.attach(0, updateDepth, 20);
-    OS.attach(1, printData, 50);
-
-    straeming();
+  // OS.attach(0, updateGPS, 120);
+  OS.attach(1, printData, 100);
+  // OS.attach(2, updateCompass, 300);
 }
 
-// void calibrateIMU()
-// {
-//     mode = 2;
-//     // calibrate anytime you want to
-//     printServiceMsg("Calibration_started");
-//     printServiceMsg("Accel_Gyro_calibration_will_start_in_5sec.");
-//     printServiceMsg("Please_leave_the_device_still_on_the_flat_plane.");
-//     delay(5000);
-//     // mpu.calibrateAccelGyro();
-
-//     printServiceMsg("Mag_calibration_will_start_in_5sec.");
-//     printServiceMsg("Please_Wave_device_in_a_figure_eight_until_done.");
-//     delay(5000);
-//     mpu.calibrateMag();
-//     mpu.verbose(false);
-
-//     // save to eeprom
-//     printServiceMsg("Write_calibrated_parameters_to_EEPROM");
-//     saveCalibration();
-
-//     // load from eeprom
-//     printServiceMsg("Load_calibrated_parameters_from_EEPROM");
-//     loadCalibration();
-//     printServiceMsg("Calibration_done");
-// }
 
 void setMotors()
 {
     int *intData = parser.getData();
-    int m1_val_new = map(intData[1], -100, 100, 1100, 1900);
-    m1_val = m1_val_new;
-    int m2_val_new = map(intData[2], -100, 100, 1100, 1900);
-    int m3_val_new = map(intData[3], -100, 100, 1100, 1900);
-    int m4_val_new = map(intData[4], -100, 100, 1100, 1900);
+    dr1_val_new = map(intData[1], -100, 100, 1080, 1880);
+    dr2_val_new = map(intData[2], -100, 100, 1080, 1880);
+    // manip_val_new = map(intData[6], 0, 100, 1800, 2500);
 
-    if (intData[5] != ledValue) {
-        ledValue = intData[5];
+    dr1.writeMicroseconds(dr1_val_new);
+
+    dr2.writeMicroseconds(dr2_val_new);
+    // Manipul.writeMicroseconds(manip_val_new);
+
+    if (intData[3] != ledValue) {
+        ledValue = intData[3];
         analogWrite(ledPin, ledValue);
     }
-
-
-//        int s1_val = dataArray[4];
-//        int s2_val = dataArray[5];
-//        int s3_val = dataArray[6];
-//        int s4_val = dataArray[7];
-//
-//        int l1_val = dataArray[8];
-
-        m1.writeMicroseconds(m1_val_new);
-
-        m2.writeMicroseconds(m2_val_new);
-
-        m3.writeMicroseconds(m3_val_new);
-
-        m4.writeMicroseconds(m4_val_new);
 }
 
-void loop()
-{
-    parser.update();
 
-    if (parser.received())
-    {
-        int comand = parser.getData()[0];
+void loop() {
+  parser.update();
+  if (parser.received()){
+    int comand = parser.getData()[0];
+    
+    if (comand == 3 && mode == 2){straeming();}
 
-        if (comand == 2 && mode == 1)
-        {
-            stopStreaming();
-            // calibrateIMU();
-        }
-        else if (comand == 1 && mode == 2)
-        {
-            straeming();
-        }
+    setMotors();
+  }
+  
 
-        else if (comand == 3) {
-            setMotors();
-            // straeming();
-        }
+  updateIMU();
 
-    }
-    updateIMU();
-
-    OS.tick();
+  OS.tick();
 
 }

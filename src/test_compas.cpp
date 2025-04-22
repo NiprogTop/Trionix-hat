@@ -10,7 +10,7 @@
  */
 #include <DFRobot_QMC5883.h>
 
-DFRobot_QMC5883 compass(&Wire, QMC5883_ADDRESS); /* I2C addr */
+DFRobot_QMC5883 compass(&Wire, HMC5883L_ADDRESS); /* I2C addr */
 
 void setup()
 {

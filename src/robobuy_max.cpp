@@ -26,7 +26,7 @@ Servo dr1, dr2, Manipul;
 #define PARSE_AMOUNT 5
 // #define PARSE_AMOUNT 7
 
-String depthMeters;
+String depthMeters = "0";
 
 GY_85 GY85;
 // int ax=0;
@@ -89,7 +89,7 @@ void printServiceMsg(String msg)
 
 void stopStreaming()
 {
-    // OS.stop(0);
+    OS.stop(0);
     OS.stop(1);
     OS.stop(2);
 }
@@ -97,7 +97,7 @@ void stopStreaming()
 void straeming()
 {
     mode = 1;
-    // OS.start(0);
+    OS.start(0);
     OS.start(1);
     OS.start(2);
 }
@@ -113,7 +113,7 @@ void printData()
                     // + String(mpu.getAngleZ()) + ";";
                     + String(heading) + " "
                     //depth under robot
-                    + String(depthMeters) + ";";
+                    + String(depthMeters) + " ;";
 
                     // +String(GPS_data)
                     // temp
@@ -195,28 +195,32 @@ void updateCompass()
     heading = mag.HeadingDegress;
 }
 
+String parseSDDBT(String sentence) {
+  if (sentence.startsWith("$SDDBT")) {
+      // Parse the NMEA sentence
+      // Serial.println(sentence);
+        int commaIndex1 = sentence.indexOf(',');
+        int commaIndex2 = sentence.indexOf(',', commaIndex1 + 1);
+        int commaIndex3 = sentence.indexOf(',', commaIndex2 + 1);
+        int commaIndex4 = sentence.indexOf(',', commaIndex3 + 1);
+        int commaIndex5 = sentence.indexOf(',', commaIndex4 + 1);
+
+        String depthStr = sentence.substring(commaIndex3+1, commaIndex4);
+        return depthStr;
+     
+    }
+}
+
 void updateEcholot(){
   if (Serial2.available()) {
-    // Read the incoming data
     String nmeaSentence = Serial2.readStringUntil('\n');
-    depthMeters = parseSDDBT(nmeaSentence);
+    if (nmeaSentence.startsWith("$SDDBT")) {
+      depthMeters = parseSDDBT(nmeaSentence);
+    }
   }
 }
 
-String parseSDDBT(String sentence) {
-  // Split the sentence into parts based on commas
-  int commaIndex1 = sentence.indexOf(',');
-  int commaIndex2 = sentence.indexOf(',', commaIndex1 + 1);
-  int commaIndex3 = sentence.indexOf(',', commaIndex2 + 1);
-  int commaIndex4 = sentence.indexOf(',', commaIndex3 + 1);
-  int commaIndex5 = sentence.indexOf(',', commaIndex4 + 1);
 
-  // Extract the depth in meters (between the 4th and 5th commas)
-  String depthStr = sentence.substring(commaIndex3+1, commaIndex4);
-
-  // Convert the depth string to a float
-  return depthStr;
-}
 
 
 void updateIMU()
@@ -234,6 +238,7 @@ void updateIMU()
 void setup() {
   pinMode(2, OUTPUT); // activate level comunication
   digitalWrite(2, HIGH);
+  pinMode(PE0, LOW);
 
   Serial.begin(115200);
   Wire.begin();
@@ -271,7 +276,7 @@ void setup() {
   Serial2.begin(115200);
   Serial.begin(115200);
 
-  OS.attach(0, updateGPS, 120);
+  OS.attach(0, updateEcholot, 120);
   OS.attach(1, printData, 100);
   OS.attach(2, updateCompass, 300);
 }
